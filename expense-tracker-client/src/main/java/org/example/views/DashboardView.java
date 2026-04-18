@@ -1,30 +1,49 @@
 package org.example.views;
 
+import javafx.beans.Observable;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
+import org.example.animations.LoadingAnimationPane;
 import org.example.controllers.DashboardController;
+import org.example.models.MonthlyFinance;
 import org.example.utils.Utilitie;
 import org.example.utils.ViewNavigator;
 
+import java.math.BigDecimal;
+import java.time.Year;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 
 public class DashboardView {
     private String email;
+    private LoadingAnimationPane loadingAnimationPane;
 
     private Label currentBalanceLabel,currentBalance;
     private Label totalIncomeLabel,totalIncome;
     private Label totalExpenseLabel,totalExpense;
 
-    private Button addTransactionButton;
+    private ComboBox<Integer> yearComboBox;
+    private Button addTransactionButton,viewChartButton;
     private VBox recentTransactionBox;
     private ScrollPane recentTransactionsScrollPane;
 
-    private MenuItem createCategoryManuItem,viewCategoriesManuItem;
+    private MenuItem createCategoryManuItem,viewCategoriesManuItem
+            ,logoutMenuItem;
+
+    //table
+    private TableView<MonthlyFinance> transactionTable;
+    private TableColumn<MonthlyFinance,String> monthColumn;
+    private TableColumn<MonthlyFinance, BigDecimal> incomeColumn;
+    private TableColumn<MonthlyFinance, BigDecimal> expenseColumn;
+
 
     public DashboardView(String email) {
         this.email = email;
+        loadingAnimationPane=new LoadingAnimationPane(Utilitie.APP_WIDTH,Utilitie.APP_HEIGHT);
 
         currentBalanceLabel = new Label("Current Balance:");
         totalIncomeLabel = new Label("Total Income:");
@@ -42,6 +61,24 @@ public class DashboardView {
         scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
 
         new DashboardController(this);
+
+        scene.widthProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                loadingAnimationPane.resizeWidth(t1.doubleValue());
+            }
+        });
+
+        scene.heightProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                loadingAnimationPane.resizeHeight(t1.doubleValue());
+            }
+        });
+
+
+
+
         ViewNavigator.switchViews(scene);
     }
 
@@ -60,7 +97,7 @@ public class DashboardView {
         VBox.setVgrow(contentGridPane,Priority.ALWAYS);
 
         mainContainerWrapper.getChildren().addAll(balanceSummaryBox,contentGridPane);
-        mainContainer.getChildren().addAll(menuBar,mainContainerWrapper);
+        mainContainer.getChildren().addAll(menuBar,mainContainerWrapper,loadingAnimationPane);
         return new Scene(mainContainer, Utilitie.APP_WIDTH, Utilitie.APP_HEIGHT);
     }
 
@@ -70,8 +107,9 @@ public class DashboardView {
 
         createCategoryManuItem = new MenuItem("Create Category");
         viewCategoriesManuItem = new MenuItem("View Categories");
+        logoutMenuItem = new MenuItem("Logout");
 
-        fileMenu.getItems().addAll(createCategoryManuItem,viewCategoriesManuItem);
+        fileMenu.getItems().addAll(createCategoryManuItem,viewCategoriesManuItem,logoutMenuItem);
         menuBar.getMenus().addAll(fileMenu);
         return menuBar;
     }
@@ -112,13 +150,62 @@ public class DashboardView {
         columnConstraint.setPercentWidth(50);
         gridPane.getColumnConstraints().addAll(columnConstraint,columnConstraint);
 
-        //recent transactions
+        //transaction table summary(left side)
+        VBox transactionTableSummaryBox=new VBox(20);
+        HBox yearComboBoxAndChartButtonBox=createYearComboBoxAndChartButtonBox();
+        VBox transactionTableContentBox=createTransactionsTableContentBox();
+        VBox.setVgrow(transactionTableContentBox,Priority.ALWAYS);
+        transactionTableSummaryBox.getChildren().addAll(yearComboBoxAndChartButtonBox,transactionTableContentBox);
+
+
+        //recent transactions (right side)
         VBox recentTransactionsVBox=createRecentTransactionsVBox();
         recentTransactionsVBox.getStyleClass().addAll("field-background","rounded-border","padding-10px");
         GridPane.setVgrow(recentTransactionsVBox,Priority.ALWAYS);
 
+        gridPane.add(transactionTableSummaryBox,0,0);
         gridPane.add(recentTransactionsVBox,1,0);
         return gridPane;
+    }
+
+    private HBox createYearComboBoxAndChartButtonBox(){
+        HBox hbox=new HBox(15);
+        yearComboBox=new ComboBox<>();
+        yearComboBox.getStyleClass().addAll("text-size-md");
+        yearComboBox.setValue(Year.now().getValue());//defaults to the current year
+        //yearComboBox.setValue(2024);
+
+        viewChartButton=new Button("View Chart");
+        viewChartButton.getStyleClass().addAll("field-background","text-light-gray","text-size-md");
+
+        hbox.getChildren().addAll(yearComboBox,viewChartButton);
+        return hbox;
+    }
+
+    private VBox createTransactionsTableContentBox(){
+        VBox vbox=new VBox();
+        transactionTable=new TableView<>();
+        VBox.setVgrow(transactionTable,Priority.ALWAYS);
+
+        monthColumn=new TableColumn<>("Month");
+        monthColumn.setCellValueFactory(new PropertyValueFactory<>("month"));
+        monthColumn.getStyleClass().addAll("main-background","text-size-md","text-light-gray");
+
+
+        incomeColumn=new TableColumn<>("Income");
+        incomeColumn.setCellValueFactory(new PropertyValueFactory<>("income"));
+        incomeColumn.getStyleClass().addAll("main-background","text-size-md","text-light-gray");
+
+
+        expenseColumn=new TableColumn<>("Expense");
+        expenseColumn.setCellValueFactory(new PropertyValueFactory<>("expense"));
+        expenseColumn.getStyleClass().addAll("main-background","text-size-md","text-light-gray");
+
+
+        transactionTable.getColumns().addAll(monthColumn,incomeColumn,expenseColumn);
+        vbox.getChildren().addAll(transactionTable);
+        return vbox;
+
     }
 
     private VBox createRecentTransactionsVBox(){
@@ -139,7 +226,7 @@ public class DashboardView {
                 addTransactionButton);
 
         //recent transactions box
-        recentTransactionBox=new VBox();
+        recentTransactionBox=new VBox(10);
         recentTransactionsScrollPane=new ScrollPane(recentTransactionBox);
         recentTransactionsScrollPane.setFitToWidth(true);
         recentTransactionsScrollPane.setFitToHeight(true);
@@ -167,7 +254,37 @@ public class DashboardView {
         return viewCategoriesManuItem;
     }
 
+    public MenuItem getLogoutManuItem() {return logoutMenuItem;}
+
     public Button getAddTransactionButton() {
         return addTransactionButton;
+    }
+
+    public VBox getRecentTransactionBox() {
+        return recentTransactionBox;
+    }
+
+    public LoadingAnimationPane getLoadingAnimationPane() {
+        return loadingAnimationPane;
+    }
+
+    public TableView<MonthlyFinance> getTransactionTable() {
+        return transactionTable;
+    }
+
+    public TableColumn<MonthlyFinance, String> getMonthColumn() {
+        return monthColumn;
+    }
+
+    public TableColumn<MonthlyFinance, BigDecimal> getIncomeColumn() {
+        return incomeColumn;
+    }
+
+    public TableColumn<MonthlyFinance, BigDecimal> getExpenseColumn() {
+        return expenseColumn;
+    }
+
+    public ComboBox<Integer> getYearComboBox() {
+        return yearComboBox;
     }
 }

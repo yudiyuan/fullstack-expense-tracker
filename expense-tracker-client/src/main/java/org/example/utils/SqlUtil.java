@@ -2,11 +2,13 @@ package org.example.utils;
 
 import com.google.gson.*;
 import javafx.scene.control.Alert;
+import org.example.models.Transaction;
 import org.example.models.TransactionCategory;
 import org.example.models.User;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +40,9 @@ public class SqlUtil {
             String name=jsonObject.get("name").getAsString();
             String email=jsonObject.get("email").getAsString();
             String password=jsonObject.get("password").getAsString();
-            LocalDateTime createAt=new Gson().fromJson(jsonObject.get("createAt"), LocalDateTime.class);
+            LocalDateTime createdAt=new Gson().fromJson(jsonObject.get("createAt"), LocalDateTime.class);
 
-            return  new User(id,name,email,password,createAt);
+            return  new User(id,name,email,password,createdAt);
 
         }catch(IOException e){
             e.printStackTrace();
@@ -52,7 +54,6 @@ public class SqlUtil {
         return null;
 
     }
-
 
     public static List<TransactionCategory> getAllTransactionCategoriesByUser(User user){
         List<TransactionCategory> categories=new ArrayList<>();
@@ -88,7 +89,102 @@ public class SqlUtil {
     return  null;
     }
 
+    public static List<Transaction> getRecentTransactionsByUserId(int userId, int startPage, int endPage, int size){
+        List<Transaction> recentTransactions=new ArrayList<>();
 
+        HttpURLConnection conn = null;
+        try{
+            conn= ApiUtil.fetchApi(
+                    "/api/v1/transaction/recent/user/"+userId+
+                            "?startPage="+startPage+"&endPage="+endPage+"&size="+size,
+                    ApiUtil.RequestMethod.GET,
+                    null
+            );
+
+            if(conn.getResponseCode()!=200){
+                return null;
+            }
+
+            String result=ApiUtil.readApiResponse(conn);
+            JsonArray resultJsonArray=new JsonParser().parse(result).getAsJsonArray();
+            for(int i=0;i<resultJsonArray.size();i++){
+                JsonObject transactionJsonObj=resultJsonArray.get(i).getAsJsonObject();
+                int transactionId=transactionJsonObj.get("id").getAsInt();
+
+                TransactionCategory transactionCategory=null;
+                if(transactionJsonObj.has("transactionCategory")
+                     && !transactionJsonObj.get("transactionCategory").isJsonNull()) {
+                    JsonObject transactionCategoryJsonObj = transactionJsonObj.get("transactionCategory").getAsJsonObject();
+                    int transactionCategoryId = transactionCategoryJsonObj.get("id").getAsInt();
+                    String transactionCategoryName = transactionCategoryJsonObj.get("categoryName").getAsString();
+                    String transactionCategoryColor = transactionCategoryJsonObj.get("categoryColor").getAsString();
+
+                    transactionCategory = new TransactionCategory(
+                            transactionCategoryId,
+                            transactionCategoryName,
+                            transactionCategoryColor
+                    );
+                }
+
+                    String transactionName=transactionJsonObj.get("transactionName").getAsString();
+                    double transactionAmount=transactionJsonObj.get("transactionAmount").getAsDouble();
+                    LocalDate transactionDate=LocalDate.parse(transactionJsonObj.get("transactionDate").getAsString());
+                    String transactionType=transactionJsonObj.get("transactionType").getAsString();
+
+                    Transaction transaction=new Transaction(
+                            transactionId,
+                            transactionCategory,
+                            transactionName,
+                            transactionAmount,
+                            transactionDate,
+                            transactionType
+                    );
+
+                    recentTransactions.add(transaction);
+                }
+
+                return recentTransactions;
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally {
+            if(conn!=null){
+                conn.disconnect();
+            }
+        }
+
+        return null;
+    }
+
+    public static List<Transaction> getAllTransactionsByUserId(int userId, int year){
+        List<Transaction> transactions=new ArrayList<>();
+
+        HttpURLConnection conn = null;
+        try{
+            conn= ApiUtil.fetchApi(
+                    "/api/v1/transaction/user/"+userId+"?year="+year,
+                    ApiUtil.RequestMethod.GET,
+                    null
+            );
+
+            if(conn.getResponseCode()!=200){
+                return null;
+            }
+
+            String results=ApiUtil.readApiResponse(conn);
+            System.out.println(results);
+
+            return transactions;
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally {
+            if(conn!=null){
+                conn.disconnect();
+            }
+        }
+
+        return null;
+
+    }
 
     //post
     public static boolean postLoginUser(String email, String password){
@@ -160,8 +256,59 @@ public class SqlUtil {
         return false;
     }
 
+    public static boolean postTransaction(JsonObject transactionData){
+        HttpURLConnection conn = null;
+        try{
+            conn= ApiUtil.fetchApi(
+                    "/api/v1/transaction",
+                    ApiUtil.RequestMethod.POST,
+                    transactionData
+            );
+
+            if(conn.getResponseCode()!=200){
+                return false;
+            }
+
+            return   true;
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally {
+            if(conn!=null){
+                conn.disconnect();
+            }
+        }
+
+        return false;
+
+    }
 
     //update
+    public static boolean putTransaction(JsonObject newTransactionData){
+        HttpURLConnection conn = null;
+        try{
+            conn= ApiUtil.fetchApi(
+                    "/api/v1/transaction",
+                    ApiUtil.RequestMethod.PUT,
+                    newTransactionData
+            );
+
+            if(conn.getResponseCode()!=200){
+                System.out.println("Error(putTransaction): "+conn.getResponseCode());
+                return false;
+            }
+
+            return   true;
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally {
+            if(conn!=null){
+                conn.disconnect();
+            }
+        }
+
+        return false;
+    }
+
     public static boolean putTransactionCategory(int categoryId, String newCategoryName,String newCategoryColor){
         HttpURLConnection conn = null;
         try{
@@ -214,8 +361,35 @@ public class SqlUtil {
         }
 
         return false;
-
     }
+
+    public static boolean deleteTransactionByID(int transactionId){
+        HttpURLConnection conn = null;
+        try{
+            conn= ApiUtil.fetchApi(
+                    "/api/v1/transaction/"+transactionId,
+                    ApiUtil.RequestMethod.DELETE,
+                    null
+            );
+
+            if(conn.getResponseCode()!=200){
+                System.out.println("Error(deleteTransactionById): "+conn.getResponseCode());
+                return false;
+            }
+
+            return   true;
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally {
+            if(conn!=null){
+                conn.disconnect();
+            }
+        }
+
+        return false;
+    }
+
+
 
 
 }

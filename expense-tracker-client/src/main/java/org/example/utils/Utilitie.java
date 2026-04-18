@@ -2,6 +2,9 @@ package org.example.utils;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ColorPicker;
+import org.example.models.TransactionCategory;
+
+import java.util.List;
 
 public class Utilitie {
      public static final int APP_WIDTH = 1614;
@@ -16,4 +19,19 @@ public class Utilitie {
          String color=colorPicker.getValue().toString();
          return color.substring(2,color.length()-2);
     }
+
+    public static TransactionCategory findTransactionCategoryByName(List<TransactionCategory> transactionCategories, String CategoryName){
+
+         for(TransactionCategory transactionCategory:transactionCategories){
+             if(transactionCategory.getCategoryName().equals(CategoryName)){
+                 return transactionCategory;
+             }
+
+         }
+        return null;
+
+    }
+
+
+
 }

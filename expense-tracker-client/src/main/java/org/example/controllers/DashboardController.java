@@ -1,30 +1,97 @@
 package org.example.controllers;
 
+import javafx.beans.Observable;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
+import org.example.components.TransactionComponent;
 import org.example.dialogs.CreateNewCategoryDialog;
 import org.example.dialogs.CreateOrEditTransactionDialog;
 import org.example.dialogs.ViewOrEditTransactionCategoryDialog;
+import org.example.models.MonthlyFinance;
+import org.example.models.Transaction;
 import org.example.models.User;
 import org.example.utils.SqlUtil;
 import org.example.views.DashboardView;
+import org.example.views.LoginView;
+
+import java.util.List;
 
 public class DashboardController {
+    private final int recentTransactionSize=10;
+
     private DashboardView dashboardView;
 
     private User user;
+    private List<Transaction> recentTransactions,currentTransactionsByYear;
+
+    private int currentPage;
+    private int currentYear;
 
     public DashboardController(DashboardView dashboardView){
         this.dashboardView=dashboardView;
+      //currentYear=dashboardView.getYearComboBox().getValue();
+       currentYear=2024;
         fetchUserData();
         intialize();
     }
 
-    private void fetchUserData() {
-      user= SqlUtil.getUserByEmail(dashboardView.getEmail());
+    public void fetchUserData() {
+        //load the loading animation
+        dashboardView.getLoadingAnimationPane().setVisible(true);
+
+        //remove all children from the dashboard view
+        dashboardView.getRecentTransactionBox().getChildren().clear();
+
+        System.out.println("email = " + dashboardView.getEmail());
+        user= SqlUtil.getUserByEmail(dashboardView.getEmail());
+
+
+        //get the transactions for the year
+        currentTransactionsByYear=SqlUtil.getAllTransactionsByUserId(user.getId(),currentYear);
+
+        createRecentTransactionComponents();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                    dashboardView.getLoadingAnimationPane().setVisible(false);
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
 
     }
+
+    private void createRecentTransactionComponents(){
+        recentTransactions=SqlUtil.getRecentTransactionsByUserId(
+                user.getId(),
+                0,
+                currentPage,
+                recentTransactionSize
+        );
+
+        if(recentTransactions==null) return;
+
+        for(Transaction transaction:recentTransactions){
+            dashboardView.getRecentTransactionBox().getChildren().add(
+                    new TransactionComponent(this,transaction)
+            );
+        }
+    }
+
+    private ObservableList<MonthlyFinance> calculateMonthlyFinances(){
+        double[] incomeCounter=new double[12];
+        double[] expenseCounter=new double[12];
+
+        return null;
+    }
+
 
     private void intialize(){
         addMenuActions();
@@ -46,14 +113,26 @@ public class DashboardController {
             }
         });
 
+        dashboardView.getLogoutManuItem().setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                new LoginView().show();
+            }
+        });
+
     }
 
     private void addRecentTransactionActions(){
         dashboardView.getAddTransactionButton().setOnMouseClicked(new  EventHandler<MouseEvent>(){
             @Override
             public void handle(MouseEvent mouseEvent) {
-                new CreateOrEditTransactionDialog(user,false).showAndWait();
+                new CreateOrEditTransactionDialog(DashboardController.this,false).showAndWait();
             }
         });
     }
+
+    public User getUser() {
+        return user;
+    }
+
 }
