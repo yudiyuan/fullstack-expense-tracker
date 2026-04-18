@@ -7,8 +7,13 @@ import com.example.expense_tracker.repositories.TransactionCategoryRepository;
 import com.example.expense_tracker.repositories.TransactionRepository;
 import com.example.expense_tracker.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -25,6 +30,32 @@ public class TransactionService {
 
     @Autowired
     private UserRepository userRepository;
+
+    //get
+    public List<Transaction> getRecentTransactionsByUserId(int userId,int startPage,int endPage,int size){
+        logger.info("Getting the most recent transactions for user: "+userId);
+        List<Transaction> combineResults=new ArrayList<>();
+
+        for(int page=startPage;page<=endPage;page++){
+            Pageable pageable= PageRequest.of(page,size);
+            List<Transaction> pageResults=transactionRepository.findAllByUserIdOrderByTransactionDateDesc(
+                    userId,
+                    pageable
+            );
+
+            combineResults.addAll(pageResults);
+        }
+        return combineResults;
+    }
+
+    public List<Transaction> getAllTransactionsByUserIdAndYear(int userId,int year){
+        logger.info("Getting all transaction in year:"+year+" for user: "+userId);
+        LocalDate startDate=LocalDate.of(year,1,1);
+        LocalDate endDate=LocalDate.of(year,12,31);
+
+        return transactionRepository.findAllByUserIdAndTransactionDateBetweenOrderByTransactionDateDesc(userId,startDate,endDate);
+    }
+
 
     //post
     public Transaction createTransaction(Transaction transaction) {
@@ -54,6 +85,24 @@ public class TransactionService {
 
         return transactionRepository.save(newTransaction);
 
+    }
+
+    //put
+    public Transaction updateTransaction(Transaction transaction) {
+        logger.info("Updating Transaction with id: "+transaction.getId());
+        Optional<Transaction> transactionOptional=transactionRepository.findById(transaction.getId());
+        if(transactionOptional.isEmpty()) return null;
+        return transactionRepository.save(transaction);
+    }
+
+    //delete
+    public void deleteTransactionById(int transactionId){
+        logger.info("Deleting Transaction with id: " + transactionId);
+        Optional<Transaction> transactionOptional=transactionRepository.findById(transactionId);
+
+        if(transactionOptional.isEmpty()) return;
+
+        transactionRepository.delete(transactionOptional.get());
     }
 
 
