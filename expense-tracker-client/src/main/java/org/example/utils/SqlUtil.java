@@ -155,6 +155,46 @@ public class SqlUtil {
         return null;
     }
 
+    /*
+    public static List<Transaction> getAllTransactionsByUserId(int userId, int year){
+        List<Transaction> transactions = new ArrayList<>();
+
+        HttpURLConnection conn = null;
+        try{
+            String path = "/api/v1/transaction/user/" + userId + "?year=" + year;
+            System.out.println("Request path = " + path);
+
+            conn = ApiUtil.fetchApi(
+                    path,
+                    ApiUtil.RequestMethod.GET,
+                    null
+            );
+
+            int responseCode = conn.getResponseCode();
+            System.out.println("responseCode = " + responseCode);
+
+            String results = ApiUtil.readApiResponse(conn);
+            System.out.println("results = " + results);
+
+            if(responseCode != 200){
+                return null;
+            }
+
+            return transactions;
+        }catch(IOException e){
+            e.printStackTrace();
+        }finally {
+            if(conn != null){
+                conn.disconnect();
+            }
+        }
+
+        return null;
+    }
+
+     */
+
+
     public static List<Transaction> getAllTransactionsByUserId(int userId, int year){
         List<Transaction> transactions=new ArrayList<>();
 
