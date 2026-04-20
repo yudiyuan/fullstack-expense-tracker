@@ -50,6 +50,9 @@ public class DashboardController {
 
         //get the transactions for the year
         currentTransactionsByYear=SqlUtil.getAllTransactionsByUserId(user.getId(),currentYear);
+        for(Transaction transaction:currentTransactionsByYear){
+            System.out.println(transaction.getTransactionName());
+        }
 
         createRecentTransactionComponents();
 

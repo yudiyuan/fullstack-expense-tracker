@@ -211,7 +211,44 @@ public class SqlUtil {
             }
 
             String results=ApiUtil.readApiResponse(conn);
-            System.out.println(results);
+            JsonArray resultJson=new JsonParser().parse(results).getAsJsonArray();
+
+            for(int i=0;i<resultJson.size();i++){
+                JsonObject transactionJsonObj=resultJson.get(i).getAsJsonObject();
+                int transactionId=transactionJsonObj.get("id").getAsInt();
+
+                TransactionCategory transactionCategory=null;
+                if(transactionJsonObj.has("transactionCategory")
+                       && !transactionJsonObj.get("transactionCategory").isJsonNull()) {
+                    JsonObject transactionCategoryJsonObj = transactionJsonObj.get("transactionCategory").getAsJsonObject();
+                    int transactionCategoryId = transactionCategoryJsonObj.get("id").getAsInt();
+                    String transactionCategoryName = transactionCategoryJsonObj.get("categoryName").getAsString();
+                    String transactionCategoryColor = transactionCategoryJsonObj.get("categoryColor").getAsString();
+
+                    transactionCategory = new TransactionCategory(
+                            transactionCategoryId,
+                            transactionCategoryName,
+                            transactionCategoryColor
+                    );
+                }
+
+                String transactionName=transactionJsonObj.get("transactionName").getAsString();
+                double transactionAmount=transactionJsonObj.get("transactionAmount").getAsDouble();
+                LocalDate transactionDate=LocalDate.parse(transactionJsonObj.get("transactionDate").getAsString());
+                String transactionType=transactionJsonObj.get("transactionType").getAsString();
+
+                Transaction transaction=new Transaction(
+                        transactionId,
+                        transactionCategory,
+                        transactionName,
+                        transactionAmount,
+                        transactionDate,
+                        transactionType
+                );
+
+                transactions.add(transaction);
+
+            }
 
             return transactions;
         }catch(IOException e){
