@@ -56,6 +56,9 @@ public class TransactionService {
         return transactionRepository.findAllByUserIdAndTransactionDateBetweenOrderByTransactionDateDesc(userId,startDate,endDate);
     }
 
+    public List<Integer> getDistinctTransactionYears(int userId){
+        return transactionRepository.findDistinctYears(userId);
+    }
 
     //post
     public Transaction createTransaction(Transaction transaction) {

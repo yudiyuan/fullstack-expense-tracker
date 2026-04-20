@@ -55,6 +55,13 @@ public class TransactionController {
         return ResponseEntity.status(HttpStatus.OK).body(recentTransactionList);
     }
 
+    @GetMapping("/years/{userId}")
+    public ResponseEntity<List<Integer>> getDistinctTransactionYears(@PathVariable  int userId)
+    {
+        logger.info("Getting distinct years by userId " + userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(transactionService.getDistinctTransactionYears(userId));
+    }
 
     //post
     @PostMapping
