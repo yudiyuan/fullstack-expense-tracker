@@ -1,5 +1,6 @@
 package org.example.views;
 
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -10,6 +11,7 @@ import javafx.scene.layout.*;
 import org.example.animations.LoadingAnimationPane;
 import org.example.controllers.DashboardController;
 import org.example.models.MonthlyFinance;
+import org.example.models.Transaction;
 import org.example.utils.Utilitie;
 import org.example.utils.ViewNavigator;
 
@@ -66,6 +68,7 @@ public class DashboardView {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
                 loadingAnimationPane.resizeWidth(t1.doubleValue());
+                resizeTableWidthColumns();
             }
         });
 
@@ -144,6 +147,7 @@ public class DashboardView {
 
     private GridPane createContentGridPane(){
         GridPane gridPane=new GridPane();
+        gridPane.setHgap(10);
 
         //set constraints to the cells in the gridpane
         ColumnConstraints columnConstraint=new ColumnConstraints();
@@ -204,6 +208,8 @@ public class DashboardView {
 
         transactionTable.getColumns().addAll(monthColumn,incomeColumn,expenseColumn);
         vbox.getChildren().addAll(transactionTable);
+
+        resizeTableWidthColumns();
         return vbox;
 
     }
@@ -237,6 +243,21 @@ public class DashboardView {
 
     }
 
+
+    private void resizeTableWidthColumns(){
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                double colsWidth=transactionTable.getWidth()*(0.335);
+              monthColumn.setPrefWidth(colsWidth);
+              incomeColumn.setPrefWidth(colsWidth);
+              expenseColumn.setPrefWidth(colsWidth);
+
+
+            }
+        });
+
+    }
 
     public MenuItem getCreateCategoryManuItem() {
         return createCategoryManuItem;

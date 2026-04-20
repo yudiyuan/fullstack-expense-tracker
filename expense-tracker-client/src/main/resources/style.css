@@ -72,6 +72,13 @@ ScrollPane > .viewport {
     -fx-text-fill: #fff;
 }
 
+.table-view .scroll-bar:horizontal,
+.table-view .scroll-header .label{
+       -fx-opacity:0;
+       -fx-pref-width:0;
+       -fx-pref-height:0;
+}
+
 .text-light-red{
     -fx-text-fill: #ba2f2f;
 }
