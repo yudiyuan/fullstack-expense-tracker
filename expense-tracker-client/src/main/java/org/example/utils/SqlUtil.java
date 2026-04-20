@@ -263,6 +263,38 @@ public class SqlUtil {
 
     }
 
+    public static List<Integer> getAllDistinctYears(int userId){
+        List<Integer> distinctYears=new ArrayList<>();
+        HttpURLConnection conn=null;
+        try{
+            conn=ApiUtil.fetchApi(
+                    "/api/v1/transaction/years/"+userId ,
+                    ApiUtil.RequestMethod.GET,null
+            );
+
+            if(conn.getResponseCode()!=200){
+                System.out.println("Error(getAllDistinctYears): "+conn.getResponseCode());
+            }
+
+            String result=ApiUtil.readApiResponse(conn);
+            JsonArray resultsArray=new JsonParser().parse(result).getAsJsonArray();
+
+            for(int i=0;i<resultsArray.size();i++){
+                int year=resultsArray.get(i).getAsInt();
+                distinctYears.add(year);
+            }
+
+            return   distinctYears;
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            if(conn!=null)
+                conn.disconnect();
+        }
+
+        return  null;
+    }
+
     //post
     public static boolean postLoginUser(String email, String password){
         //authenticate email and password

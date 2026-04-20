@@ -53,9 +53,7 @@ public class DashboardController {
 
         //get the transactions for the year
         currentTransactionsByYear=SqlUtil.getAllTransactionsByUserId(user.getId(),currentYear);
-//        for(Transaction transaction:currentTransactionsByYear){
-//            System.out.println(transaction.getTransactionName());
-//        }
+        dashboardView.getYearComboBox().getItems().addAll(SqlUtil.getAllDistinctYears(user.getId()));
 
         dashboardView.getTransactionTable().setItems(calculateMonthlyFinances());
         createRecentTransactionComponents();
