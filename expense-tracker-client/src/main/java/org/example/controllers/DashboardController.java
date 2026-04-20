@@ -1,6 +1,7 @@
 package org.example.controllers;
 
 import javafx.beans.Observable;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -16,6 +17,9 @@ import org.example.utils.SqlUtil;
 import org.example.views.DashboardView;
 import org.example.views.LoginView;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.List;
 
 public class DashboardController {
@@ -31,8 +35,7 @@ public class DashboardController {
 
     public DashboardController(DashboardView dashboardView){
         this.dashboardView=dashboardView;
-      //currentYear=dashboardView.getYearComboBox().getValue();
-       currentYear=2024;
+        currentYear=dashboardView.getYearComboBox().getValue();
         fetchUserData();
         intialize();
     }
@@ -44,16 +47,17 @@ public class DashboardController {
         //remove all children from the dashboard view
         dashboardView.getRecentTransactionBox().getChildren().clear();
 
-        System.out.println("email = " + dashboardView.getEmail());
+       // System.out.println("email = " + dashboardView.getEmail());
         user= SqlUtil.getUserByEmail(dashboardView.getEmail());
 
 
         //get the transactions for the year
         currentTransactionsByYear=SqlUtil.getAllTransactionsByUserId(user.getId(),currentYear);
-        for(Transaction transaction:currentTransactionsByYear){
-            System.out.println(transaction.getTransactionName());
-        }
+//        for(Transaction transaction:currentTransactionsByYear){
+//            System.out.println(transaction.getTransactionName());
+//        }
 
+        dashboardView.getTransactionTable().setItems(calculateMonthlyFinances());
         createRecentTransactionComponents();
 
         new Thread(new Runnable() {
@@ -92,7 +96,27 @@ public class DashboardController {
         double[] incomeCounter=new double[12];
         double[] expenseCounter=new double[12];
 
-        return null;
+        for(Transaction transaction:currentTransactionsByYear){
+            LocalDate transactionDate=transaction.getTransactionDate();
+            if(transaction.getTransactionType().equalsIgnoreCase("Income")){
+                incomeCounter[transactionDate.getMonth().getValue()-1]+=transaction.getTransactionAmount();
+            }else {
+                expenseCounter[transactionDate.getMonth().getValue()-1]+=transaction.getTransactionAmount();
+            }
+        }
+
+        ObservableList<MonthlyFinance> monthlyFinances= FXCollections.observableArrayList();
+        for(int i=0;i<12;i++){
+            MonthlyFinance monthlyFinance=new MonthlyFinance(
+                    Month.of(i+1).name(),
+                    new BigDecimal(String.valueOf(incomeCounter[i])),
+                    new BigDecimal(String.valueOf(expenseCounter[i]))
+            );
+                    monthlyFinances.add(monthlyFinance);
+        }
+
+
+        return monthlyFinances;
     }
 
 
