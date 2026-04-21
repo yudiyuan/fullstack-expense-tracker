@@ -195,13 +195,17 @@ public class SqlUtil {
      */
 
 
-    public static List<Transaction> getAllTransactionsByUserId(int userId, int year){
+    public static List<Transaction> getAllTransactionsByUserId(int userId, int year,Integer month){
         List<Transaction> transactions=new ArrayList<>();
 
         HttpURLConnection conn = null;
+        String apiPath="/api/v1/transaction/user/"+userId+"?year="+year;
+        if( month != null)
+            apiPath+="&month="+month;
+
         try{
             conn= ApiUtil.fetchApi(
-                    "/api/v1/transaction/user/"+userId+"?year="+year,
+                    apiPath,
                     ApiUtil.RequestMethod.GET,
                     null
             );
