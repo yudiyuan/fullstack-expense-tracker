@@ -1,6 +1,5 @@
 package com.example.expense_tracker.entities;
 
-
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -24,7 +23,7 @@ public class Transaction {
     private String transactionName;
 
     @Column(name = "transaction_amount")
-    private Double transactionAmount;
+    private double transactionAmount;
 
     @Column(name = "transaction_date")
     private LocalDate transactionDate;
@@ -60,11 +59,11 @@ public class Transaction {
         this.transactionName = transactionName;
     }
 
-    public Double getTransactionAmount() {
+    public double getTransactionAmount() {
         return transactionAmount;
     }
 
-    public void setTransactionAmount(Double transactionAmount) {
+    public void setTransactionAmount(double transactionAmount) {
         this.transactionAmount = transactionAmount;
     }
 
@@ -84,3 +83,11 @@ public class Transaction {
         this.transactionType = transactionType;
     }
 }
+
+
+
+
+
+
+
+

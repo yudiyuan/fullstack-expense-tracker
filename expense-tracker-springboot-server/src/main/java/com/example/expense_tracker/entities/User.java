@@ -1,43 +1,31 @@
-//Model layer
 package com.example.expense_tracker.entities;
 
 import jakarta.persistence.*;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import java.time.LocalDateTime;
 
-//marks class as JPA entity which means that it will be mapped to the user table in our db
-@Entity
-
-@Table(name = "user")
-
+@Entity // marks class as JPA entity which means that it will be mapped to the user table in our db
+@Table(name = "user") // labels this entity to the proper name which is "user"
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name")
+    @Column(name="name")
     private String name;
 
-    @Column(name = "email")
+    @Column(name="email")
     private String email;
 
-    @Column(name = "password")
+    @Column(name="password")
     private String password;
 
-    @Column(name = "created_at")
+    @Column(name="created_at")
     private LocalDateTime createdAt;
-
 
     public Integer getId() {
         return id;
     }
-
-
-//    Don't allow anyone to change id
-//    public void setId(Integer id) {
-//        this.id = id;
-//    }
 
     public String getName() {
         return name;
@@ -71,3 +59,15 @@ public class User {
         this.createdAt = createdAt;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

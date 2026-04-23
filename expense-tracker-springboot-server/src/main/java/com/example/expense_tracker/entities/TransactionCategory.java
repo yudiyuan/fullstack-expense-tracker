@@ -1,6 +1,5 @@
 package com.example.expense_tracker.entities;
 
-
 import jakarta.persistence.*;
 
 @Entity
@@ -10,11 +9,19 @@ public class TransactionCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @Column(name = "category_name")
+    private String categoryName;
+
+    @Column(name = "category_color")
+    private String categoryColor;
+
     public Integer getId() {
         return id;
     }
-
-
 
     public User getUser() {
         return user;
@@ -39,14 +46,4 @@ public class TransactionCategory {
     public void setCategoryColor(String categoryColor) {
         this.categoryColor = categoryColor;
     }
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    @Column(name = "category_name")
-    private String categoryName;
-
-    @Column(name = "category_color")
-    private String categoryColor;
 }
