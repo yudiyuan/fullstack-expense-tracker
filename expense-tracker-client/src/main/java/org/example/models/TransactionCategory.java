@@ -5,7 +5,7 @@ public class TransactionCategory {
     private String categoryName;
     private String categoryColor;
 
-    public  TransactionCategory(int id, String categoryName, String categoryColor) {
+    public TransactionCategory(int id, String categoryName, String categoryColor) {
         this.id = id;
         this.categoryName = categoryName;
         this.categoryColor = categoryColor;
@@ -14,7 +14,6 @@ public class TransactionCategory {
     public int getId() {
         return id;
     }
-
 
     public String getCategoryName() {
         return categoryName;

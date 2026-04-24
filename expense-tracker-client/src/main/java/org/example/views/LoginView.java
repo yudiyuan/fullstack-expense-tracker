@@ -1,73 +1,97 @@
 package org.example.views;
 
-//All of the imported ones are classes.
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.example.controllers.LoginController;
+import org.example.utils.LocaleManager;
 import org.example.utils.Utilitie;
 import org.example.utils.ViewNavigator;
 
+import java.util.Locale;
+
 public class LoginView {
-
-//    Group of “control” fields (UI components)
-
-    //    Label is essentially a class provided by JavaFX, just like String, so it starts with a capital letter.
-    private Label expenseTrackerLabel=new Label("Expense Tracker");
-    private TextField usernameField=new TextField();
-    private PasswordField passwordField=new PasswordField();
-    private Button loginButton=new Button("Login");
-    private Label signupLabel=new Label("Don't have an account? Click Here");
+    private Label expenseTrackerLabel =
+            new Label(LocaleManager.getString("app.title"));
+    private Button englishButton = new Button("English");
+    private Button chineseButton = new Button("中文");
+    private TextField usernameField = new TextField();
+    private PasswordField passwordField = new PasswordField();
+    private Button loginButton = new Button(LocaleManager.getString("login.button"));
+    private Label signupLabel = new Label(LocaleManager.getString("login.signup"));
 
     public void show(){
-        Scene scene=createScene();
+        Scene scene = createScene();
         scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
 
         new LoginController(this);
-
-        //class name.static method
         ViewNavigator.switchViews(scene);
     }
 
     private Scene createScene(){
-        VBox mainContainerBox=new VBox(74);
+        VBox mainContainerBox = new VBox(74);
         mainContainerBox.getStyleClass().addAll("main-background");
         mainContainerBox.setAlignment(Pos.TOP_CENTER);
 
-        expenseTrackerLabel.getStyleClass().addAll("header","text-white");
+        expenseTrackerLabel.getStyleClass().addAll("header", "text-white");
 
-        VBox loginFormBox=createLoginFormBox();
+        HBox languageBox = createLanguageBox();
+        VBox loginFormBox = createLoginFormBox();
 
-        mainContainerBox.getChildren().addAll(expenseTrackerLabel,loginFormBox);
-
-        //Any member that is declared as static—whether it is a variable or a method—belongs to the class itself and can be accessed using ClassName.member.
-        return new  Scene(mainContainerBox, Utilitie.APP_WIDTH, Utilitie.APP_HEIGHT);
+        mainContainerBox.getChildren().addAll(languageBox, expenseTrackerLabel, loginFormBox);
+        return new Scene(mainContainerBox, Utilitie.APP_WIDTH, Utilitie.APP_HEIGHT);
     }
 
-    private  VBox createLoginFormBox(){
-        VBox loginFormVBox=new VBox(51);
+    private VBox createLoginFormBox(){
+        VBox loginFormVBox = new VBox(51);
         loginFormVBox.setAlignment(Pos.CENTER);
 
-
-        usernameField.getStyleClass().addAll("field-background","text-light-gray","text-size-lg","rounded-border");
-        usernameField.setPromptText("Enter Username");
+        usernameField.getStyleClass().addAll("field-background", "text-light-gray", "text-size-lg", "rounded-border");
+        usernameField.setPromptText(LocaleManager.getString("login.username.prompt"));
         usernameField.setMaxWidth(473);
 
-        passwordField.getStyleClass().addAll("field-background","text-light-gray","text-size-lg","rounded-border");
-        passwordField.setPromptText("Enter Password");
+        passwordField.getStyleClass().addAll("field-background", "text-light-gray", "text-size-lg", "rounded-border");
+        passwordField.setPromptText(LocaleManager.getString("login.password.prompt"));
         passwordField.setMaxWidth(473);
 
-        loginButton.getStyleClass().addAll("text-size-lg","bg-light-blue","text-white","text-weight-700","rounded-border");
+        loginButton.getStyleClass().addAll("text-size-lg", "bg-light-blue", "text-white", "text-weight-700", "rounded-border");
         loginButton.setMaxWidth(473);
-        signupLabel.getStyleClass().addAll("text-size-md","text-light-gray","text-underline","link-text");
 
-        loginFormVBox.getChildren().addAll(usernameField,passwordField,loginButton,signupLabel);
+        signupLabel.getStyleClass().addAll("text-size-md", "text-light-gray", "text-underline", "link-text");
+
+        loginFormVBox.getChildren().addAll(usernameField, passwordField, loginButton, signupLabel);
         return loginFormVBox;
+    }
 
+    private HBox createLanguageBox() {
+        HBox languageBox = new HBox(10);
+        languageBox.setAlignment(Pos.TOP_RIGHT);
+        languageBox.setMaxWidth(Double.MAX_VALUE);
+        languageBox.setStyle("-fx-padding: 20 30 0 0;");
+
+        englishButton.getStyleClass().add("link-text");
+        chineseButton.getStyleClass().add("link-text");
+
+        englishButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+        chineseButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+
+        englishButton.setOnAction(e -> {
+            LocaleManager.setLocale(Locale.ENGLISH);
+            new LoginView().show();
+        });
+
+        chineseButton.setOnAction(e -> {
+            LocaleManager.setLocale(Locale.CHINESE);
+            new LoginView().show();
+        });
+
+        languageBox.getChildren().addAll(englishButton, chineseButton);
+        return languageBox;
     }
 
     public Label getExpenseTrackerLabel() {

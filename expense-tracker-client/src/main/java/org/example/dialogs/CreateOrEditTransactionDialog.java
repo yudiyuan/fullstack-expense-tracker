@@ -11,18 +11,18 @@ import org.example.components.TransactionComponent;
 import org.example.controllers.DashboardController;
 import org.example.models.Transaction;
 import org.example.models.TransactionCategory;
-import org.example.models.User;
+import org.example.utils.LocaleManager;
 import org.example.utils.SqlUtil;
 import org.example.utils.Utilitie;
-import org.example.views.DashboardView;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class CreateOrEditTransactionDialog extends CustomDialog{
+public class CreateOrEditTransactionDialog extends CustomDialog {
     private List<TransactionCategory> transactionCategories;
-    private TextField transactionNameField,transactionAmountField;
+
+    private TextField transactionNameField, transactionAmountField;
     private DatePicker transactionDatePicker;
     private ComboBox<String> transactionCategoryBox;
     private ToggleGroup transactionTypeToggleGroup;
@@ -38,170 +38,200 @@ public class CreateOrEditTransactionDialog extends CustomDialog{
         this.transactionComponent = transactionComponent;
         this.dashboardController = dashboardController;
 
-        setTitle(isEditing ? "Edit Transaction" : "Create New Transaction");
+        setTitle(isEditing
+                ? LocaleManager.getString("dialog.transaction.edit")
+                : LocaleManager.getString("dialog.transaction.create"));
+
         setWidth(700);
         setHeight(595);
 
-        transactionCategories= SqlUtil.getAllTransactionCategoriesByUser(user);
+        transactionCategories = SqlUtil.getAllTransactionCategoriesByUser(user);
 
         VBox mainContentBox = createMainContentBox();
         getDialogPane().setContent(mainContentBox);
     }
 
-    //use for creating transactions
-    public CreateOrEditTransactionDialog(DashboardController dashboardController,boolean isEditing) {
-        this(dashboardController,null,isEditing);
+    public CreateOrEditTransactionDialog(DashboardController dashboardController, boolean isEditing){
+        this(dashboardController, null, isEditing);
     }
 
-    private VBox createMainContentBox() {
+    private VBox createMainContentBox(){
         VBox mainContentBox = new VBox(30);
         mainContentBox.setAlignment(Pos.CENTER);
 
         transactionNameField = new TextField();
-        transactionNameField.setPromptText("Enter Transaction Name");
-        transactionNameField.getStyleClass().addAll("field-background","text-light-gray","text-size-md",
+        transactionNameField.setPromptText(LocaleManager.getString("transaction.name.prompt"));
+        transactionNameField.getStyleClass().addAll("field-background", "text-light-gray", "text-size-md",
                 "rounded-border");
 
         transactionAmountField = new TextField();
-        transactionAmountField.setPromptText("Enter Transaction Amount");
-        transactionAmountField.getStyleClass().addAll("field-background","text-light-gray","text-size-md",
+        transactionAmountField.setPromptText(LocaleManager.getString("transaction.amount.prompt"));
+        transactionAmountField.getStyleClass().addAll("field-background", "text-light-gray", "text-size-md",
                 "rounded-border");
 
         transactionDatePicker = new DatePicker();
-        transactionDatePicker.setPromptText("Enter Transaction Date");
-        transactionDatePicker.getStyleClass().addAll("field-background","text-light-gray","text-size-md",
+        transactionDatePicker.setPromptText(LocaleManager.getString("transaction.date.prompt"));
+        transactionDatePicker.getStyleClass().addAll("field-background", "text-light-gray", "text-size-md",
                 "rounded-border");
         transactionDatePicker.setMaxWidth(Double.MAX_VALUE);
 
-        transactionCategoryBox = new ComboBox();
-        transactionCategoryBox.setPromptText("Choose Category");
-        transactionCategoryBox.getStyleClass().addAll("field-background","text-light-gray","text-size-md",
+        transactionCategoryBox = new ComboBox<>();
+        transactionCategoryBox.setPromptText(LocaleManager.getString("transaction.category.prompt"));
+        transactionCategoryBox.getStyleClass().addAll("field-background", "text-light-gray", "text-size-md",
                 "rounded-border");
         transactionCategoryBox.setMaxWidth(Double.MAX_VALUE);
-        for (TransactionCategory transactionCategory : transactionCategories){
-                transactionCategoryBox.getItems().add(transactionCategory.getCategoryName());
+
+        for(TransactionCategory transactionCategory : transactionCategories){
+            transactionCategoryBox.getItems().add(transactionCategory.getCategoryName());
         }
 
         if(isEditing){
-            Transaction transaction=transactionComponent.getTransaction();
+            Transaction transaction = transactionComponent.getTransaction();
             transactionNameField.setText(transaction.getTransactionName());
             transactionAmountField.setText(String.valueOf(transaction.getTransactionAmount()));
             transactionDatePicker.setValue(transaction.getTransactionDate());
             transactionCategoryBox.setValue(
-                    transaction.getTransactionCategory()==null?"":transaction.getTransactionCategory().
-                            getCategoryName()
+                    transaction.getTransactionCategory() == null ? "" : transaction.getTransactionCategory().getCategoryName()
             );
         }
 
-        mainContentBox.getChildren().addAll(transactionNameField,transactionAmountField,transactionDatePicker,
-                transactionCategoryBox,createTransactionTypeRadioButtonGroup(),createConfirmAndCancelButtonBox());
+        mainContentBox.getChildren().addAll(
+                transactionNameField,
+                transactionAmountField,
+                transactionDatePicker,
+                transactionCategoryBox,
+                createTransactionTypeRadioButtonGroup(),
+                createConfirmAndCancelButtonsBox()
+        );
         return mainContentBox;
     }
 
-    private HBox createTransactionTypeRadioButtonGroup() {
-        HBox radioButtonBox = new HBox(50);
-        radioButtonBox.setAlignment(Pos.CENTER);
+    private HBox createTransactionTypeRadioButtonGroup(){
+        HBox radioButtonsBox = new HBox(50);
+        radioButtonsBox.setAlignment(Pos.CENTER);
 
         transactionTypeToggleGroup = new ToggleGroup();
 
-        RadioButton incomeRadioButton = new RadioButton("Income");
+        RadioButton incomeRadioButton = new RadioButton(LocaleManager.getString("transaction.type.income"));
         incomeRadioButton.setToggleGroup(transactionTypeToggleGroup);
-        incomeRadioButton.getStyleClass().addAll("text-size-md","text-light-gray");
+        incomeRadioButton.getStyleClass().addAll("text-size-md", "text-light-gray");
+        incomeRadioButton.setUserData("income");
 
-        RadioButton expenseRadioButton = new RadioButton("Expense");
+        RadioButton expenseRadioButton = new RadioButton(LocaleManager.getString("transaction.type.expense"));
         expenseRadioButton.setToggleGroup(transactionTypeToggleGroup);
-        expenseRadioButton.getStyleClass().addAll("text-size-md","text-light-gray");
+        expenseRadioButton.getStyleClass().addAll("text-size-md", "text-light-gray");
+        expenseRadioButton.setUserData("expense");
 
         if(isEditing){
-            Transaction transaction=transactionComponent.getTransaction();
-            if(transaction.getTransactionType().equalsIgnoreCase("Income")){
+            Transaction transaction = transactionComponent.getTransaction();
+            if(transaction.getTransactionType().equalsIgnoreCase("income")){
                 incomeRadioButton.setSelected(true);
-            }else {
+            }else{
                 expenseRadioButton.setSelected(true);
             }
         }
 
-        radioButtonBox.getChildren().addAll(incomeRadioButton,expenseRadioButton);
-
-        return radioButtonBox;
+        radioButtonsBox.getChildren().addAll(incomeRadioButton, expenseRadioButton);
+        return radioButtonsBox;
     }
 
-    private HBox createConfirmAndCancelButtonBox() {
+    private HBox createConfirmAndCancelButtonsBox() {
         HBox confirmAndCancelBox = new HBox(50);
         confirmAndCancelBox.setAlignment(Pos.CENTER);
 
-        Button saveButton = new Button("Save");
+        Button saveButton = new Button(LocaleManager.getString("common.save"));
         saveButton.setPrefWidth(200);
-        saveButton.getStyleClass().addAll("bg-light-blue","text-white","text-size-md","rounded-border");
-        saveButton.setOnMouseClicked(new  EventHandler<MouseEvent>() {
+        saveButton.getStyleClass().addAll("bg-light-blue", "text-white", "text-size-md", "rounded-border");
+        saveButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent mouseEvent) {
                 JsonObject transactionDataObject = new JsonObject();
 
                 if(isEditing){
-                    transactionDataObject.addProperty("id",transactionComponent.getTransaction().getId());
+                    transactionDataObject.addProperty("id", transactionComponent.getTransaction().getId());
                 }
 
-                //extract the data from the nodes
-                String transactionName=transactionNameField.getText();
-                transactionDataObject.addProperty("transactionName",transactionName);
+                String transactionName = transactionNameField.getText();
+                transactionDataObject.addProperty("transactionName", transactionName);
 
-                double transactionAmount=Double.parseDouble(transactionAmountField.getText());
-                transactionDataObject.addProperty("transactionAmount",transactionAmount);
+                double transactionAmount = Double.parseDouble(transactionAmountField.getText());
+                transactionDataObject.addProperty("transactionAmount", transactionAmount);
 
-                LocalDate transactionDate=transactionDatePicker.getValue();
-                transactionDataObject.addProperty("transactionDate",transactionDate.format(
+                LocalDate transactionDate = transactionDatePicker.getValue();
+                transactionDataObject.addProperty("transactionDate", transactionDate.format(
                         DateTimeFormatter.ISO_LOCAL_DATE
                 ));
 
-                String transactionType=((RadioButton)transactionTypeToggleGroup.getSelectedToggle()).getText();
-                transactionDataObject.addProperty("transactionType",transactionType);
+                String transactionType = String.valueOf(transactionTypeToggleGroup.getSelectedToggle().getUserData());
+                transactionDataObject.addProperty("transactionType", transactionType);
 
-                String transactionCategoryName=transactionCategoryBox.getValue();
-                if(transactionCategoryName!=null){
-                    TransactionCategory transactionCategory= Utilitie.findTransactionCategoryByName(
+                String transactionCategoryName = transactionCategoryBox.getValue();
+                if(transactionCategoryName != null){
+                    TransactionCategory transactionCategory = Utilitie.findTransactionCategoryByName(
                             transactionCategories,
                             transactionCategoryName
                     );
 
-                    JsonObject transactionCategoryData=new JsonObject();
-                    transactionCategoryData.addProperty("id",transactionCategory.getId());
-                    transactionDataObject.add("transactionCategory",transactionCategoryData);
+                    if(transactionCategory != null){
+                        JsonObject transactionCategoryData = new JsonObject();
+                        transactionCategoryData.addProperty("id", transactionCategory.getId());
+                        transactionDataObject.add("transactionCategory", transactionCategoryData);
+                    }
                 }
 
-                JsonObject userData=new JsonObject();
-                userData.addProperty("id",user.getId());
-                transactionDataObject.add("user",userData);
+                JsonObject userData = new JsonObject();
+                userData.addProperty("id", user.getId());
+                transactionDataObject.add("user", userData);
 
-                //perform the post request to create the transaction
-                if(!isEditing?SqlUtil.postTransaction(transactionDataObject)
-                :SqlUtil.putTransaction(transactionDataObject)){
-                    //display alter message
-                    Utilitie.showAlertDialog(Alert.AlertType.INFORMATION,
-                            isEditing?"Successfully saved transaction!":"Successfully created Transaction!");
-                    //refresh our dashboard
+                if(!isEditing ? SqlUtil.postTransaction(transactionDataObject)
+                        : SqlUtil.putTransaction(transactionDataObject)) {
+
+                    Utilitie.showAlertDialog(
+                            Alert.AlertType.INFORMATION,
+                            isEditing
+                                    ? LocaleManager.getString("transaction.save.success")
+                                    : LocaleManager.getString("transaction.create.success")
+                    );
+
                     dashboardController.fetchUserData();
-                }else{
-                    Utilitie.showAlertDialog(Alert.AlertType.ERROR,
-                            isEditing?"Error:Failed to save transaction":"Error:Failed to create Transaction...");
-                }
 
+                    if(isEditing){
+                        transactionComponent.getTransactionCategoryLabel().setText(
+                                transactionCategoryName == null || transactionCategoryName.isEmpty()
+                                        ? LocaleManager.getString("transaction.undefined")
+                                        : transactionCategoryName
+                        );
+                        transactionComponent.getTransactionNameLabel().setText(transactionName);
+                        transactionComponent.getTransactionDateLabel().setText(transactionDate.toString());
+                        transactionComponent.getTransactionAmountLabel().setText(
+                                LocaleManager.formatCurrency(transactionAmount)
+                        );
+                    }
+
+                    CreateOrEditTransactionDialog.this.close();
+
+                } else {
+                    Utilitie.showAlertDialog(
+                            Alert.AlertType.ERROR,
+                            isEditing
+                                    ? LocaleManager.getString("transaction.save.failed")
+                                    : LocaleManager.getString("transaction.create.failed")
+                    );
+                }
             }
         });
 
-        Button cancelButton = new Button("Cancel");
+        Button cancelButton = new Button(LocaleManager.getString("common.cancel"));
         cancelButton.setPrefWidth(200);
-        cancelButton.getStyleClass().addAll("text-size-md","rounded-border");
-        cancelButton.setOnMouseClicked(new  EventHandler<MouseEvent>() {
+        cancelButton.getStyleClass().addAll("text-size-md", "rounded-border");
+        cancelButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent mouseEvent) {
                 CreateOrEditTransactionDialog.this.close();
-
             }
         });
 
-        confirmAndCancelBox.getChildren().addAll(saveButton,cancelButton);
+        confirmAndCancelBox.getChildren().addAll(saveButton, cancelButton);
         return confirmAndCancelBox;
     }
-
 }

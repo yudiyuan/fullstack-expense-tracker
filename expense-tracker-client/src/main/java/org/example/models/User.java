@@ -21,8 +21,6 @@ public class User {
         return id;
     }
 
-
-
     public String getName() {
         return name;
     }
@@ -50,6 +48,5 @@ public class User {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
 
 }

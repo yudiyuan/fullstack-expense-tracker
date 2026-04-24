@@ -10,56 +10,72 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class ApiUtil {
+    private static final String SPRINGBOOT_URL = "http://localhost:8080";
+    public enum RequestMethod{POST, GET, PUT, DELETE}
 
-  private static final String SPRINGBOOT_URL="http://localhost:8080";
-  public enum RequestMethod{
-    GET, POST, PUT, DELETE
-  }
-
-    public static HttpURLConnection fetchApi(String apipath, RequestMethod requestMethod, JsonObject jsonData) {
-        try {
-            URL url = new URL(SPRINGBOOT_URL + apipath);
+    public static HttpURLConnection fetchApi(String apiPath, RequestMethod requestMethod, JsonObject jsonData){
+        try{
+            // attempt to create connection
+            URL url = new URL(SPRINGBOOT_URL + apiPath);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
+            // set the request type
             conn.setRequestMethod(requestMethod.toString());
 
-            if (jsonData != null && requestMethod != RequestMethod.GET) {
-                conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+            // to send data to the api
+            if(jsonData != null && requestMethod != RequestMethod.GET){
+                // lets the api know that we will be sending in json data
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+
+                // expects the response body to be of json type
                 conn.setRequestProperty("Accept", "application/json");
+
+                // allows us to send data to the connected api
                 conn.setDoOutput(true);
 
-                try (OutputStream os = conn.getOutputStream()) {
+                // send JSON data to the server by writing it to the output stream (closes the stream automatically)
+                try(OutputStream os = conn.getOutputStream()){
                     byte[] input = jsonData.toString().getBytes(StandardCharsets.UTF_8);
+
                     os.write(input, 0, input.length);
                 }
             }
 
-            return conn;   // ✅ 关键：返回连接
-        } catch (IOException e) {
+            return conn;
+        }catch(IOException e){
             e.printStackTrace();
-            return null;
         }
+
+        return null;
     }
 
     public static String readApiResponse(HttpURLConnection conn){
-      try{
-          StringBuilder resultJson = new StringBuilder();
+        try{
+            StringBuilder resultJson =  new StringBuilder();
 
-          Scanner scanner = new Scanner(conn.getInputStream());
+            Scanner scanner = new Scanner(conn.getInputStream());
 
-          //loop through each line in the response and append it to the stringbulider
-          while (scanner.hasNext()) {
-              resultJson.append(scanner.nextLine());
-          }
+            // loop through each line in the response and append it to the stringbuilder
+            while(scanner.hasNext()){
+                resultJson.append(scanner.nextLine());
+            }
 
-          scanner.close();
+            scanner.close();
 
-          return resultJson.toString();
-      }catch (IOException e){
-          e.printStackTrace();
+            return resultJson.toString();
+        }catch (IOException e){
+            e.printStackTrace();
         }
 
-      return null;
+        return null;
     }
-
 }
+
+
+
+
+
+
+
+
+

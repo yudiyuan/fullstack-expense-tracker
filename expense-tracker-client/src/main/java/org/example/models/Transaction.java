@@ -1,14 +1,11 @@
 package org.example.models;
 
-import javafx.scene.control.Label;
-
 import java.time.LocalDate;
 
 public class Transaction {
     private int id;
     private TransactionCategory transactionCategory;
     private String transactionName;
-
     private double transactionAmount;
     private LocalDate transactionDate;
     private String transactionType;
